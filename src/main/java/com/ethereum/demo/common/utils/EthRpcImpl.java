@@ -31,6 +31,7 @@ public class EthRpcImpl implements EthRpc{
 
     private static final int SLEEP_DURATION = 15000;
     private static final int ATTEMPTS = 40;
+    private static final int CHAIN_ID = 2333;
 
     public EthRpcImpl(){
         this.web3j = Web3j.build(new HttpService("http://82.157.5.7:8545"));
@@ -159,7 +160,7 @@ public class EthRpcImpl implements EthRpc{
         //创建rawTransaction对象
         RawTransaction rawTransaction = RawTransaction.createEtherTransaction(nonce,gasPrice,gasLimit,to,etherValue);
         //对交易进行签名
-        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,2333,credentials);
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,CHAIN_ID,credentials);
         //编码
         String hexValue = Numeric.toHexString(signedMessage);
         //发送交易
@@ -170,6 +171,7 @@ public class EthRpcImpl implements EthRpc{
             return null;
         }
         String txreceipt = getTransactionReceipt(txhash);
+        System.out.println(txreceipt);
         return new TransactionResult(txhash,"",txreceipt);
     }
 
@@ -216,7 +218,7 @@ public class EthRpcImpl implements EthRpc{
      */
     @Override
     public String getTransactionReceipt(String txhash) throws Exception {
-        return waitForTransactionReceipt(txhash).getTransactionHash();
+        return waitForTransactionReceipt(txhash).toString();
     }
 
 
