@@ -1,5 +1,7 @@
 package com.ethereum.demo.common.Result;
 
+import java.util.HashMap;
+
 /**
  * @author Dr.long
  * @date 2021.03.29
@@ -78,6 +80,25 @@ public class StandardResult<T> {
 
     /**
      * @apiNote 返回失败结果
+     * @param transactionResult 交易hash和eventmsg
+     */
+    public static <T> StandardResult success(TransactionResult transactionResult){
+        //成功情况下的标准返回构造
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("txhash",transactionResult.getTxhash());
+        if(transactionResult.getReceipt()!=null){
+            map.put("txreceipt",transactionResult.getReceipt());
+        }
+        if(transactionResult.getEventmsg() == null){
+            return StandardResult.success(map);
+        }else{
+            map.put("eventMsg",transactionResult.getEventmsg());
+            return StandardResult.success(map);
+        }
+    }
+
+    /**
+     * @apiNote 返回失败结果
      */
     public static <T> StandardResult<T> fail(){
         return new StandardResult<>(ResultCode.FAIL.getCode(), ResultCode.FAIL.getMsg());
@@ -89,5 +110,14 @@ public class StandardResult<T> {
      */
     public static <T> StandardResult<T> fail(String msg){
         return new StandardResult<>(ResultCode.FAIL.getCode(), msg);
+    }
+
+    /**
+     * @apiNote 返回失败结果
+     * @param transactionResult 自定义交易消息
+     */
+    public static <T> StandardResult fail(TransactionResult transactionResult){
+        if(transactionResult == null) return StandardResult.fail();
+        return StandardResult.fail(transactionResult.getEventmsg());
     }
 }
