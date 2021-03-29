@@ -61,7 +61,6 @@ public class StandardResult<T> {
     /**
      * @apiNote 返回成功的结果
      * @param data 返回的json数据
-     * @return
      */
     public static <T> StandardResult<T> success(T data){
         return new StandardResult<>(ResultCode.SUCCESS.getCode(),ResultCode.SUCCESS.getMsg(),data);
@@ -69,10 +68,9 @@ public class StandardResult<T> {
 
     /**
      *
-     * @param data
+     * @param data 自定义的json数据格式
      * @param msg 成功的消息，自定义的
      * @apiNote 返回成功结果
-     * @return
      */
     public static <T> StandardResult<T> success(T data,String msg){
         return new StandardResult<>(ResultCode.SUCCESS.getCode(), msg, data);
@@ -82,7 +80,7 @@ public class StandardResult<T> {
      * @apiNote 返回失败结果
      */
     public static <T> StandardResult<T> fail(){
-        return new StandardResult<T>(ResultCode.FAIL.getCode(), ResultCode.FAIL.getMsg());
+        return new StandardResult<>(ResultCode.FAIL.getCode(), ResultCode.FAIL.getMsg());
     }
 
     /**
