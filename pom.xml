@@ -38,11 +38,18 @@
             <artifactId>core</artifactId>
             <version>4.5.0</version>
         </dependency>
+        <!-- 引入fastjson用于解析请求参数 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>1.2.66</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- 引入mybatis -->
 <!--        <dependency>-->
 <!--            <groupId>org.mybatis.spring.boot</groupId>-->
@@ -73,6 +80,28 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.web3j</groupId>
+                <artifactId>web3j-maven-plugin</artifactId>
+                <version>4.6.5</version>
+                <configuration>
+                    <packageName>contract</packageName>
+                    <sourceDestination>src/main/java/</sourceDestination>
+                    <nativeJavaType>true</nativeJavaType>
+                    <outputFormat>java,bin</outputFormat>
+                    <soliditySourceFiles>
+                        <directory>src/main/resources</directory>
+                        <includes>
+                            <include>**/*.sol</include>
+                        </includes>
+                    </soliditySourceFiles>
+                    <outputDirectory>
+                        <java>src/main/java/</java>
+                        <bin>src/main/java/</bin>
+                        <abi>src/main/java/</abi>
+                    </outputDirectory>
+                </configuration>
             </plugin>
         </plugins>
     </build>

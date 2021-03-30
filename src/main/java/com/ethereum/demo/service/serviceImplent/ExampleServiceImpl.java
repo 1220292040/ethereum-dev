@@ -4,20 +4,22 @@ import com.ethereum.demo.common.Result.StandardResult;
 import com.ethereum.demo.common.Result.TransactionResult;
 import com.ethereum.demo.common.utils.EthRpc;
 import com.ethereum.demo.common.utils.EthRpcImpl;
+import com.ethereum.demo.model.pojo.ChainConfiguration;
 import com.ethereum.demo.service.serviceInterface.ExampleService;
-import org.springframework.beans.factory.annotation.Autowired;
+import contract.NumTest;
 import org.springframework.stereotype.Service;
-import org.web3j.crypto.CipherException;
-import org.web3j.crypto.Hash;
+import org.web3j.abi.EventValues;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tx.RawTransactionManager;
+import org.web3j.tx.gas.ContractGasProvider;
+import org.web3j.tx.gas.DefaultGasProvider;
 
-import javax.annotation.Resource;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+
 
 @Service
 public class ExampleServiceImpl implements ExampleService {
@@ -78,6 +80,30 @@ public class ExampleServiceImpl implements ExampleService {
             return StandardResult.success(transactionResult);
         }else{
             return StandardResult.fail(transactionResult);
+        }
+    }
+
+    @Override
+    public StandardResult testContract(String walletpath) throws Exception {
+        Credentials credentials = ethRpc.getCredential(walletpath);
+        ContractGasProvider contractGasProvider = new DefaultGasProvider();
+        RawTransactionManager rawTransactionManager = new RawTransactionManager(ethRpc.getWeb3(),credentials, ChainConfiguration.CHAIN_ID);
+        NumTest numTest = NumTest.deploy(ethRpc.getWeb3(),rawTransactionManager, contractGasProvider).send();
+        HashMap<String,Object> map = new HashMap<>();
+        if(numTest.isValid()){
+            map.put("contractAddress",numTest.getContractAddress());
+            BigInteger var = numTest.getNum().send();
+            System.out.println("old:" + var.toString());
+            System.out.println();
+            TransactionReceipt transactionReceipt = numTest.store(BigInteger.valueOf(123)).send();
+//            String receipt = ethRpc.getTransactionReceipt(transactionReceipt.getTransactionHash());
+            System.out.println(transactionReceipt.toString());
+            BigInteger newvar = numTest.getNum().send();
+            System.out.println("new:"+newvar.toString());
+//            EventValues eventValues = numTest.processSomeEvent(transactionReceipt);
+            return StandardResult.success(map);
+        }else{
+            return StandardResult.fail();
         }
     }
 }

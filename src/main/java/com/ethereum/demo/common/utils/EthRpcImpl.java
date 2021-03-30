@@ -1,18 +1,16 @@
 package com.ethereum.demo.common.utils;
 
-import com.ethereum.demo.common.Result.StandardResult;
 import com.ethereum.demo.common.Result.TransactionResult;
+import com.ethereum.demo.model.pojo.ChainConfiguration;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.protocol.core.methods.response.Web3ClientVersion;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.Contract;
 import org.web3j.tx.Transfer;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
@@ -20,28 +18,47 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.security.Signature;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 public class EthRpcImpl implements EthRpc{
     private Web3j web3j;
     private Admin admin;
 
-    private static final int SLEEP_DURATION = 15000;
-    private static final int ATTEMPTS = 40;
-    private static final int CHAIN_ID = 2333;
 
     public EthRpcImpl(){
-        this.web3j = Web3j.build(new HttpService("http://82.157.5.7:8545"));
-        this.admin = Admin.build(new HttpService("http://82.157.5.7:8545"));
+        this.web3j = Web3j.build(new HttpService(ChainConfiguration.RPC_URL));
+        this.admin = Admin.build(new HttpService(ChainConfiguration.RPC_URL));
     }
 
     public EthRpcImpl(String url) {
         this.web3j = Web3j.build(new HttpService(url));
         this.admin = Admin.build(new HttpService(url));
     }
+
+    public Web3j getWeb3j() {
+        return web3j;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    @Override
+    public Web3j getWeb3() {
+        return this.web3j;
+    }
+
+    @Override
+    /**
+     *
+     * @return  返回连接的以太坊的链ID，string类型
+     * @throws IOException 抛出io异常
+     */
+    public String getChainNetId() throws IOException {
+        return web3j.netVersion().send().getNetVersion();
+    }
+
     /**
      *
      * @return 返回web3的信息
@@ -160,7 +177,7 @@ public class EthRpcImpl implements EthRpc{
         //创建rawTransaction对象
         RawTransaction rawTransaction = RawTransaction.createEtherTransaction(nonce,gasPrice,gasLimit,to,etherValue);
         //对交易进行签名
-        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,CHAIN_ID,credentials);
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,ChainConfiguration.CHAIN_ID,credentials);
         //编码
         String hexValue = Numeric.toHexString(signedMessage);
         //发送交易
@@ -201,10 +218,10 @@ public class EthRpcImpl implements EthRpc{
     TransactionReceipt waitForTransactionReceipt(String transactionHash) throws Exception {
 
         Optional<TransactionReceipt> transactionReceiptOptional =
-                getTransactionReceipt(transactionHash, SLEEP_DURATION, ATTEMPTS);
+                getTransactionReceipt(transactionHash, ChainConfiguration.SLEEP_DURATION, ChainConfiguration.ATTEMPTS);
 
         if (!transactionReceiptOptional.isPresent()) {
-            System.out.println("Transaction receipt not generated after " + ATTEMPTS + " attempts");
+            System.out.println("Transaction receipt not generated after " + ChainConfiguration.ATTEMPTS + " attempts");
         }
 
         return transactionReceiptOptional.get();
@@ -221,5 +238,98 @@ public class EthRpcImpl implements EthRpc{
         return waitForTransactionReceipt(txhash).toString();
     }
 
+    /**
+     *
+     * @param password 密码
+     * @param walletpath 钱包文件的path
+     * @return 钱包对象
+     * @throws IOException 异常
+     * @throws CipherException 异常
+     */
+    @Override
+    public Credentials getCredential(String password,String walletpath) throws IOException, CipherException {
+        return WalletUtils.loadCredentials(password,walletpath);
+    }
 
+    @Override
+    public Credentials getCredential(String walletpath) throws IOException, CipherException {
+        return WalletUtils.loadCredentials("",walletpath);
+    }
+
+    @Override
+    public BigInteger getBlockNumber() throws IOException {
+        return web3j.ethBlockNumber().send().getBlockNumber();
+    }
+
+    @Override
+    public EthBlock.Block getBlockByHash(String hash) throws IOException {
+        return web3j.ethGetBlockByHash(hash,true).send().getBlock();
+    }
+
+    @Override
+    public EthBlock.Block getBlockByNumber(BigInteger number) throws IOException {
+        DefaultBlockParameter defaultBlockParameter = new DefaultBlockParameterNumber(number);
+        return web3j.ethGetBlockByNumber(defaultBlockParameter,true).send().getBlock();
+    }
+
+    @Override
+    public org.web3j.protocol.core.methods.response.Transaction getTransactionByHash(String txhash) throws IOException {
+        return web3j.ethGetTransactionByHash(txhash).send().getTransaction().get();
+    }
+
+    @Override
+    public BigInteger getHashRate() throws IOException {
+        return web3j.ethHashrate().send().getHashrate();
+    }
+
+    @Override
+    public Boolean isMinning() throws IOException {
+        return web3j.ethMining().send().isMining();
+    }
+
+    @Override
+    public String getContractCode(String address) throws IOException {
+        return web3j.ethGetCode(address,DefaultBlockParameterName.LATEST).send().getCode();
+    }
+
+    @Override
+    public String newAccount(String password) throws IOException {
+        return this.admin.personalNewAccount(password).send().getAccountId();
+    }
+
+    @Override
+    public BigInteger getPrivateKey(String password, String walletpath) throws IOException, CipherException {
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        return credentials.getEcKeyPair().getPrivateKey();
+    }
+
+    @Override
+    public BigInteger getPrivateKey(String walletpath) throws IOException, CipherException {
+        Credentials credentials = WalletUtils.loadCredentials("",walletpath);
+        return credentials.getEcKeyPair().getPrivateKey();
+    }
+
+    @Override
+    public BigInteger getPublicKey(String password, String walletpath) throws IOException, CipherException {
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        return credentials.getEcKeyPair().getPublicKey();
+    }
+
+    @Override
+    public BigInteger getPublicKey(String walletpath) throws IOException, CipherException {
+        Credentials credentials = WalletUtils.loadCredentials("",walletpath);
+        return credentials.getEcKeyPair().getPublicKey();
+    }
+
+    @Override
+    public String getCredentialAddress(String password, String walletpath) throws IOException, CipherException {
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        return credentials.getAddress();
+    }
+
+    @Override
+    public String getCredentialAddress(String walletpath) throws IOException, CipherException {
+        Credentials credentials = WalletUtils.loadCredentials("",walletpath);
+        return credentials.getAddress();
+    }
 }

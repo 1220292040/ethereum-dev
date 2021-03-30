@@ -1,12 +1,11 @@
 package com.ethereum.demo.service.serviceInterface;
 
 import com.ethereum.demo.common.Result.StandardResult;
-import com.ethereum.demo.common.Result.TransactionResult;
 import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
 
 public interface ExampleService {
     StandardResult getVersion() throws IOException;
@@ -22,4 +21,5 @@ public interface ExampleService {
                                            String from,
                                            String to,
                                            BigInteger value) throws Exception;
+    StandardResult testContract(String walletpath) throws Exception;
 }

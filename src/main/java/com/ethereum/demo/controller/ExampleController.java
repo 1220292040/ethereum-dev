@@ -1,17 +1,14 @@
 package com.ethereum.demo.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONPObject;
 import com.ethereum.demo.common.Result.StandardResult;
 import com.ethereum.demo.service.serviceInterface.ExampleService;
+import contract.NumTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.web3j.crypto.CipherException;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
-
 
 @CrossOrigin
 @RestController
@@ -56,5 +53,8 @@ public class ExampleController {
         BigInteger value = new BigInteger(params.get("value").toString());
         return exampleServicel.sendTransferTransaction(walletpath,from,to,value);
     }
-
+    @GetMapping("/contract")
+    public StandardResult testContract() throws Exception {
+        return exampleServicel.testContract("/Users/longbo/IdeaProjects/ethereum-dev/src/main/resources/wallet/UTC--2021-03-27T13-10-32.460046781Z--a8c340835aed60bd4b9736855effc95030850969");
+    }
 }
