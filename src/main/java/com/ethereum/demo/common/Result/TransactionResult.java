@@ -1,8 +1,9 @@
 package com.ethereum.demo.common.Result;
 
-import java.util.HashMap;
-import java.util.Map;
 
+/**
+ * 处理交易类型的返回数据，有哈希，收据，事件数据
+ */
 public class TransactionResult {
     private String txhash;
     private String eventmsg;

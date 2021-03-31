@@ -5,8 +5,7 @@ import java.util.HashMap;
 /**
  * @author longbo
  * @date 2021.03.29
- * @param <T> json对象
- * @version v0.1
+ * @param <T> map<String,Object>的映射，作为json对象返回
  * @apiNote 用于定义标准返回格式
  */
 public class StandardResult<T> {

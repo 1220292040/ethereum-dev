@@ -3,7 +3,6 @@ package com.ethereum.demo.common.Result;
 /**
  * @author longbo
  * @date 2021.03.29
- * @version v0.1
  * @apiNote 枚举类，用来存放返回码以及返回消息
  */
 public enum ResultCode {

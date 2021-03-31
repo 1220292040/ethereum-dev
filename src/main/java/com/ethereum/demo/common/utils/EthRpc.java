@@ -1,6 +1,8 @@
 package com.ethereum.demo.common.utils;
 
 import com.ethereum.demo.common.Result.TransactionResult;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -8,19 +10,17 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author longbo
  * @date 2021.03.30
  * @apiNote 部分以太坊常用的API*
- * @TODO: 补文档
+ * @TODO: 补文档，写单元测试类
  * 之后的计划：
- * @TODO: sendContractTransaction(...)
- * @TODO: contractCallViewFunction(...)
  * @TODO: ens技术了解
  * @TODO: geth区块filters，订阅区块链的某些事件
  *
@@ -125,6 +125,10 @@ public interface EthRpc {
      */
     String getContractCode(String address) throws IOException;
     //发送合约创建交易
-    TransactionResult createContractTransaction(String walletpath,String password,String from,String data) throws IOException, CipherException;
-    TransactionResult createContractTransaction(String walletpath,String password,String from,BigInteger value,String data) throws IOException, CipherException;
+    TransactionResult createContractTransaction(String walletpath,String password,String from,String data) throws Exception;
+    TransactionResult createContractTransaction(String walletpath,String password,String from,BigInteger value,String data) throws Exception;
+    //调用一般合约方法
+    String sendContractTransaction(String from,Function function,String contractAddress,BigInteger value) throws IOException;
+    //调用只读合约方法
+    List<Type> contractCallViewFunction(String from, Function function, String contractAddress) throws IOException, ExecutionException, InterruptedException;
 }
