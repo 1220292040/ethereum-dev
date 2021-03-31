@@ -8,15 +8,22 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Transaction;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
 /**
- * @author Dr.long
+ * @author longbo
  * @date 2021.03.30
- * @apiNote 部分以太坊常用的API
- * @// TODO: 2021/3/30 近期需要把合约部署的另一种方式补上，即和python那样部署的方式，目前用的是idea内置插件直接部署调用的，在示例程序中有
+ * @apiNote 部分以太坊常用的API*
+ * @TODO: 补文档
+ * 之后的计划：
+ * @TODO: sendContractTransaction(...)
+ * @TODO: contractCallViewFunction(...)
+ * @TODO: ens技术了解
+ * @TODO: geth区块filters，订阅区块链的某些事件
+ *
  */
 public interface EthRpc {
     /**
@@ -32,6 +39,12 @@ public interface EthRpc {
     BigInteger getHashRate() throws IOException;
     //节点是否在挖矿
     Boolean isMinning() throws IOException;
+    //启动geth挖矿
+    Boolean minerStart(int threadCount) throws IOException;
+    //结束geth挖矿
+    Boolean minerStop() throws IOException;
+
+    //--------------------------------------------------------------------//
 
     /**
      * 账户类
@@ -94,16 +107,24 @@ public interface EthRpc {
                                               String from,
                                               String to,
                                               BigInteger value) throws Exception;
+    TransactionResult sendTransferTransaction(String walletpath,
+                                              String password,
+                                              String from,
+                                              String to,
+                                              BigInteger value) throws Exception;
     //通过交易获取交易Receipt信息
     String getTransactionReceipt(String txhash) throws Exception;
     //通过hash获取交易信息
     Transaction getTransactionByHash(String txhash) throws IOException;
-
+    //发送带有data的rawTransaction，value单位为ether
+    TransactionResult sendRawTransaction(String walletpath,String password,String from,String to,BigInteger value,String data) throws IOException, CipherException;
     //--------------------------------------------------------------------//
 
     /**
      * 合约类
      */
     String getContractCode(String address) throws IOException;
-
+    //发送合约创建交易
+    TransactionResult createContractTransaction(String walletpath,String password,String from,String data) throws IOException, CipherException;
+    TransactionResult createContractTransaction(String walletpath,String password,String from,BigInteger value,String data) throws IOException, CipherException;
 }

@@ -3,7 +3,7 @@ package com.ethereum.demo.common.Result;
 import java.util.HashMap;
 
 /**
- * @author Dr.long
+ * @author longbo
  * @date 2021.03.29
  * @param <T> json对象
  * @version v0.1

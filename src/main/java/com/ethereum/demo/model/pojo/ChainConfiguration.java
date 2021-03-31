@@ -1,5 +1,10 @@
 package com.ethereum.demo.model.pojo;
 
+/**
+ * @author longbo
+ * @date 2021.03.30
+ * @apiNote 放置全局变量
+ */
 public class ChainConfiguration {
 
     public static final long CHAIN_ID = 2333L;

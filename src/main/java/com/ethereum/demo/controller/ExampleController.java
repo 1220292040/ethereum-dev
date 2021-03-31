@@ -3,7 +3,6 @@ package com.ethereum.demo.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.ethereum.demo.common.Result.StandardResult;
 import com.ethereum.demo.service.serviceInterface.ExampleService;
-import contract.NumTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

@@ -38,6 +38,11 @@
             <artifactId>core</artifactId>
             <version>4.5.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>geth</artifactId>
+            <version>4.5.0</version>
+        </dependency>
         <!-- 引入fastjson用于解析请求参数 -->
         <dependency>
             <groupId>com.alibaba</groupId>

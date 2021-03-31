@@ -10,30 +10,37 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.*;
+import org.web3j.protocol.geth.Geth;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.Transfer;
+import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class EthRpcImpl implements EthRpc{
+
     private Web3j web3j;
     private Admin admin;
-
+    private Geth geth;
 
     public EthRpcImpl(){
         this.web3j = Web3j.build(new HttpService(ChainConfiguration.RPC_URL));
         this.admin = Admin.build(new HttpService(ChainConfiguration.RPC_URL));
+        this.geth = Geth.build(new HttpService(ChainConfiguration.RPC_URL));
     }
 
     public EthRpcImpl(String url) {
         this.web3j = Web3j.build(new HttpService(url));
         this.admin = Admin.build(new HttpService(url));
+        this.geth = Geth.build(new HttpService(url));
     }
 
     public Web3j getWeb3j() {
@@ -43,6 +50,8 @@ public class EthRpcImpl implements EthRpc{
     public Admin getAdmin() {
         return admin;
     }
+
+    public Geth getGeth() { return geth; }
 
     @Override
     public Web3j getWeb3() {
@@ -169,7 +178,7 @@ public class EthRpcImpl implements EthRpc{
     public TransactionResult sendTransferTransaction(String walletpath,String from, String to, BigInteger value) throws Exception {
         //解析钱包
         Credentials credentials = WalletUtils.loadCredentials("",walletpath);
-        //获取nonce
+        //获取nonce等常数
         BigInteger nonce = this.web3j.ethGetTransactionCount(from,DefaultBlockParameterName.PENDING).send().getTransactionCount();
         BigInteger gasLimit = Transfer.GAS_LIMIT;
         BigInteger gasPrice = this.web3j.ethGasPrice().send().getGasPrice();
@@ -188,6 +197,134 @@ public class EthRpcImpl implements EthRpc{
             return null;
         }
         String txreceipt = getTransactionReceipt(txhash);
+        System.out.println(txreceipt);
+        return new TransactionResult(txhash,"",txreceipt);
+    }
+
+    @Override
+    public TransactionResult sendTransferTransaction(String walletpath,String password,String from, String to, BigInteger value) throws Exception {
+        //解析钱包
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        //获取nonce等常数
+        BigInteger nonce = this.web3j.ethGetTransactionCount(from,DefaultBlockParameterName.PENDING).send().getTransactionCount();
+        BigInteger gasLimit = Transfer.GAS_LIMIT;
+        BigInteger gasPrice = this.web3j.ethGasPrice().send().getGasPrice();
+        BigInteger etherValue = new BigDecimal(value).multiply(new BigDecimal("1e18")).toBigIntegerExact();
+        //创建rawTransaction对象
+        RawTransaction rawTransaction = RawTransaction.createEtherTransaction(nonce,gasPrice,gasLimit,to,etherValue);
+        //对交易进行签名
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,ChainConfiguration.CHAIN_ID,credentials);
+        //编码
+        String hexValue = Numeric.toHexString(signedMessage);
+        //发送交易
+        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
+        String txhash = ethSendTransaction.getTransactionHash();
+        if(txhash == null){
+            System.out.println("txhash null");
+            return null;
+        }
+        String txreceipt = getTransactionReceipt(txhash);
+        System.out.println(txreceipt);
+        return new TransactionResult(txhash,"",txreceipt);
+    }
+
+
+    @Override
+    public TransactionResult sendRawTransaction(String walletpath,String password,String from, String to, BigInteger value, String data) throws IOException, CipherException {
+        //解析钱包
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        //获取nonce等常数
+        BigInteger nonce = this.web3j.ethGetTransactionCount(from,DefaultBlockParameterName.PENDING).send().getTransactionCount();
+        //用gasprovider提供的参数
+        BigInteger gasLimit = DefaultGasProvider.GAS_LIMIT;
+        BigInteger gasPrice = DefaultGasProvider.GAS_PRICE;
+        BigInteger etherValue = new BigDecimal(value).multiply(new BigDecimal("1e18")).toBigIntegerExact();
+        //创建rawTransaction对象
+        RawTransaction rawTransaction = RawTransaction.createTransaction(nonce,gasPrice,gasLimit,to,etherValue,data);
+        //对交易进行签名
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,ChainConfiguration.CHAIN_ID,credentials);
+        //编码
+        String hexValue = Numeric.toHexString(signedMessage);
+        //发送交易
+        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
+        String txhash = ethSendTransaction.getTransactionHash();
+        if(txhash == null){
+            System.out.println("txhash null");
+            System.out.println(ethSendTransaction.getError().getMessage());
+            return null;
+        }
+        String txreceipt = null;
+        try {
+            txreceipt = getTransactionReceipt(txhash);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println(txreceipt);
+        return new TransactionResult(txhash,"",txreceipt);
+    }
+
+    @Override
+    public TransactionResult createContractTransaction(String walletpath, String password, String from, String data) throws IOException, CipherException {
+        //解析钱包
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        //获取nonce等常数
+        BigInteger nonce = this.web3j.ethGetTransactionCount(from,DefaultBlockParameterName.PENDING).send().getTransactionCount();
+        //用gasprovider提供的参数
+        BigInteger gasLimit = DefaultGasProvider.GAS_LIMIT;
+        BigInteger gasPrice = DefaultGasProvider.GAS_PRICE;
+        //创建rawTransaction对象
+        RawTransaction rawTransaction = RawTransaction.createContractTransaction(nonce,gasPrice,gasLimit,BigInteger.ZERO,data);
+        //对交易进行签名
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,ChainConfiguration.CHAIN_ID,credentials);
+        //编码
+        String hexValue = Numeric.toHexString(signedMessage);
+        //发送交易
+        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
+        String txhash = ethSendTransaction.getTransactionHash();
+        if(txhash == null){
+            System.out.println("txhash null");
+            System.out.println(ethSendTransaction.getError().getMessage());
+            return null;
+        }
+        String txreceipt = null;
+        try {
+            txreceipt = getTransactionReceipt(txhash);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println(txreceipt);
+        return new TransactionResult(txhash,"",txreceipt);
+    }
+
+    @Override
+    public TransactionResult createContractTransaction(String walletpath, String password, String from, BigInteger value, String data) throws IOException, CipherException {
+        //解析钱包
+        Credentials credentials = WalletUtils.loadCredentials(password,walletpath);
+        //获取nonce等常数
+        BigInteger nonce = this.web3j.ethGetTransactionCount(from,DefaultBlockParameterName.PENDING).send().getTransactionCount();
+        //用gasprovider提供的参数
+        BigInteger gasLimit = DefaultGasProvider.GAS_LIMIT;
+        BigInteger gasPrice = DefaultGasProvider.GAS_PRICE;
+        //创建rawTransaction对象
+        RawTransaction rawTransaction = RawTransaction.createContractTransaction(nonce,gasPrice,gasLimit,value,data);
+        //对交易进行签名
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction,ChainConfiguration.CHAIN_ID,credentials);
+        //编码
+        String hexValue = Numeric.toHexString(signedMessage);
+        //发送交易
+        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
+        String txhash = ethSendTransaction.getTransactionHash();
+        if(txhash == null){
+            System.out.println("txhash null");
+            System.out.println(ethSendTransaction.getError().getMessage());
+            return null;
+        }
+        String txreceipt = null;
+        try {
+            txreceipt = getTransactionReceipt(txhash);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println(txreceipt);
         return new TransactionResult(txhash,"",txreceipt);
     }
@@ -331,5 +468,18 @@ public class EthRpcImpl implements EthRpc{
     public String getCredentialAddress(String walletpath) throws IOException, CipherException {
         Credentials credentials = WalletUtils.loadCredentials("",walletpath);
         return credentials.getAddress();
+    }
+
+    @Override
+    public Boolean minerStart(int threadCount) throws IOException {
+        MinerStartResponse minerStartResponse =  geth.minerStart(threadCount).send();
+        String message = minerStartResponse.getRawResponse();
+        System.out.println(message);
+        return isMinning();
+    }
+
+    @Override
+    public Boolean minerStop() throws IOException {
+        return geth.minerStop().send().success();
     }
 }

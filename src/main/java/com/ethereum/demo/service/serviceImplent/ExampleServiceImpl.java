@@ -8,7 +8,6 @@ import com.ethereum.demo.model.pojo.ChainConfiguration;
 import com.ethereum.demo.service.serviceInterface.ExampleService;
 import contract.NumTest;
 import org.springframework.stereotype.Service;
-import org.web3j.abi.EventValues;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -89,6 +88,20 @@ public class ExampleServiceImpl implements ExampleService {
         ContractGasProvider contractGasProvider = new DefaultGasProvider();
         RawTransactionManager rawTransactionManager = new RawTransactionManager(ethRpc.getWeb3(),credentials, ChainConfiguration.CHAIN_ID);
         NumTest numTest = NumTest.deploy(ethRpc.getWeb3(),rawTransactionManager, contractGasProvider).send();
+        //根据调用函数不同选择不同的gasprice和gaslimit
+        //NumTest numTest = new NumTest(...)
+//        numTest.setGasProvider(new DefaultGasProvider(){
+//            //重写它的getGasPrice和getGasLimit方法
+//            @Override
+//            public BigInteger getGasPrice(String contractFunc){
+//                switch (contractFunc){
+//                    case NumTest.FUNC_GETNUM:return ...;
+//                    case NumTest.FUNC_STORE:return ...;
+//                    default:...;
+//                }
+//            }
+//            //同理getGasLimit
+//        });
         HashMap<String,Object> map = new HashMap<>();
         if(numTest.isValid()){
             map.put("contractAddress",numTest.getContractAddress());

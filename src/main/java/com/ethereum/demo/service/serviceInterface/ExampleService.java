@@ -1,8 +1,6 @@
 package com.ethereum.demo.service.serviceInterface;
 
 import com.ethereum.demo.common.Result.StandardResult;
-import org.web3j.crypto.CipherException;
-import org.web3j.crypto.Credentials;
 
 import java.io.IOException;
 import java.math.BigInteger;
