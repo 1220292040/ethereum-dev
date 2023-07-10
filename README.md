@@ -58,7 +58,3 @@ src/main/resource下的contract文件夹里面存放的是.sol文件，合约的
 src/main/wallet文件夹保存的是钱包信息
 
 最后在src/test中有一个测试类，里面对EthRpc各个接口都分类进行了单元测试，但是偷懒把结果都是用sout的方式输出了hhh
-
-希望这个能越做越大～
-
-by long
